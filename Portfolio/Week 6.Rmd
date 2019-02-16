@@ -1,0 +1,96 @@
+---
+title: "Coding Practice"
+author: "Kunpeng Yang"
+date: "2/15/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Week 6
+
+1. Combine the data into a single dataframe. Complete all the following exercises from the dataframe!
+```{r}
+# combine vectors to data frame
+pirates <- data.frame("Name" = c("Astrid", "Lea", "Sarina", "Remon", "Letizia", "Babice", "Jonas", "Wendy", "Niveditha", "Gioia"),
+                      "Sex" = c("F", "F", "F", "M", "F", "F", "M", "F", "F", "F"),
+                      "Age" = c(30, 25, 25, 29, 22, 22, 35, 19, 32, 21),
+                      "Superhero" = c("Batman", "Superman", "Batman", "Spiderman", "Batman", "Antman", "Batman", "Superman", "Maggott", "Superman"),
+                      "Tattos" = c(11, 15, 12, 5, 65, 3, 9, 13, 900, 0),
+                      stringsAsFactors = FALSE)
+```
+
+2. What is the median age of the 10 pirates?
+```{r}
+# median age
+median(pirates$Age)
+```
+
+3. What was the mean age of female and male pirates separately?
+```{r}
+# mean age of female
+female <- subset(x = pirates, subset = Sex == "F") # select entries of female and create a new frame
+mean(female$Age) # calculate the mean of the column "age"
+
+# mean age of male
+male <- subset(x = pirates, subset = Sex == "M") # select entries of female and create a new frame
+mean(male$Age) # calculate the mean of the column "age"
+```
+
+4. What was the most number of tattoos owned by a male pirate?
+```{r}
+# the most number of tattoos owned by a male pirate?
+max(pirates$Tattos)
+```
+
+5. What percent of pirates under the age of 32 were female?
+```{r}
+under32 <- subset(x = pirates, subset = Age < 32) # select all pirates under 32
+total_number = nrow(under32) # total number of pirates under 32 years old
+female_number = nrow(under32[under32$Sex == "F",]) # number of rows which presents a female pirate
+rate <- female_number / total_number # calculate percentage
+rate
+```
+
+6. What percent of female pirates are under the age of 32?
+```{r}
+female <- subset(x = pirates, subset = Sex == "F") # select entries of female and create a new frame
+total_female <- nrow(female) # total number of female
+female_32 <- subset(x = female, subset = Age < 32) # select the females who are under 32
+number_female_32 <- nrow(female_32) # number of females who are under 32
+rate2 <- number_female_32 / total_female # calculate percentage
+rate2
+```
+
+7. Add a new column to the dataframe called tattoos.per.year which shows how many tattoos each pirate has for each year in their life.
+```{r}
+pirates$tattoos.per.year <- pirates$Tattos/pirates$Age 
+```
+
+8. Which pirate had the most number of tattoos per year?
+```{r}
+max_tatto <- max(pirates$tattoos.per.year) # find the largest tattos per year number
+pirate_max_tattos <- subset(x = pirates, subset = tattoos.per.year == max_tatto) # find the pirate 
+pirate_max_tattos$Name # return the name
+```
+
+9. What are the names of the female pirates whose favorite superhero is Superman?
+```{r}
+like_superman <- subset(x = pirates, 
+                        subset = Sex == "F" &
+                                Superhero == "Superman",
+                        select = Name)
+like_superman
+```
+
+10. What was the median number of tattoos of pirates over the age of 20 whose favorite superhero is Spiderman?
+```{r}
+spiderman_20 <- subset(x = pirates,
+                       subset = Sex == "M" & 
+                                Superhero == "Spiderman") # find the pirates over 20 and favor Spiderman
+median(spiderman_20$Tattos) # calculate the median of tatto number 
+```
+
+
