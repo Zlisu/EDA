@@ -1,0 +1,85 @@
+---
+title: "Plot practice"
+author: "Kunpeng Yang"
+date: "2/16/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Objectives
+The objectives of this problem set is to practice plotting in R. All plots were created using the ggplot2 package. 
+
+
+## Variation
+This graphic is a traditional stacked bar chart. This graphic works on the mpg dataset, which is built into the ggplot2 library. This means that you can access it simply by ggplot(mpg, ....). There is one modification above default in this graphic, I renamed the legend for more clarity.
+
+```{r plot1}
+library(ggplot2)
+
+ggplot(mpg, aes(x=class, fill=trans)) +
+  geom_bar() +
+  labs(fill="transmission")
+```
+
+## Covariation
+
+This boxplot is also built using the mpg dataset. Notice the changes in axis labels, and an altered theme_XXXX
+
+```{r plot2}
+ggplot(mpg, aes(manufacturer, hwy)) +
+  geom_boxplot(varwidth = T) +
+  labs(x="Vehicle Manufacturer",
+       y="Highway Fuel Efficiency (miles/gallon)") +
+  coord_flip() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+        panel.background=element_blank(), axis.line = element_line(colour = "black"))
+```
+
+## Patterns and models
+
+### density
+This graphic is built with another dataset diamonds a dataset also built into the ggplot2 package. For this one I used an additional package called library(ggthemes) check it out to reproduce this view.
+
+```{r plot3}
+library(ggthemes)
+ggplot(diamonds, aes(price, colour= cut)) +
+  geom_density(aes(fill=factor(cut)),alpha=0.3, size=0.6) +
+  labs(title="Density plot",
+       x="Diamond price (USD)",
+       fill="cut") +
+  theme_economist() 
+```
+
+### Correlation
+
+I am using ggplot2 package to fit a linear model to the data all within the plot framework. Three are edited labels and theme modifications as well.
+```{r plot4}
+ggplot(iris, aes(x=Sepal.Length, y=Petal.Length)) +
+  geom_point() +
+  geom_smooth(method = lm) +
+  theme(panel.grid.major = element_line(colour = "gray88"), panel.grid.minor = element_line(colour = "gray88"),
+        panel.background=element_blank()) +
+  labs(title="Relationship between Petal and Sepal Length",
+       x="Iris Sepal Length",
+       y="Iris Petal Length")
+```
+
+### Complex correlation
+
+I extend on the last example, by plotting the same data but using an additional channel to communicate species level differences. Again I fit a linear model to the data but this time one for each species, and add additional theme and labeling modicitations.
+
+```{r plot5}
+ggplot(iris, aes(Sepal.Length, Petal.Length, colour=Species)) +
+  geom_point() +
+  geom_smooth(se= F, method="lm") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+        panel.background=element_blank()) +
+  theme(legend.position = "bottom") +
+  labs(title="Relationship between Petal and Sepal Length",
+       subtitle = "Species level comparison",
+       x="Iris Sepal Length",
+       y="Iris Petal Length") 
+```
+
