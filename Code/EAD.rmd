@@ -10,9 +10,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
-![picure]()
+![bike](https://github.com/Zlisu/EDA/blob/master/Figures/bike.jpg?raw=true)
 
-link to the Github repository: [links](https://github.com/Zlisu/EDA)
+
+link to the Github repository: [Kunpeng Yang EDA project](https://github.com/Zlisu/EDA)
 
 ## Purpose and Questions
 
