@@ -1,0 +1,276 @@
+---
+title: "EAD Research on Bike Market"
+author: "Kunpeng Yang"
+date: "2/17/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+![picure]()
+
+link to the Github repository: [links](https://github.com/Zlisu/EDA)
+
+## Purpose and Questions
+
+Questions:
+
+1. Which is the best selling bike model among all stores?
+
+2. Which type of bikes (Mountain vs Road) is more expensive?
+
+3. Does the material of the bikes has influence on price?
+
+4. Is price predictive of market share?
+
+## Describe data
+
+Let's take a first look at the dataset, and find out what fileds we got
+
+```{r}
+# set working directory
+setwd("/Users/birdfish/Documents/GitHub/EDA")
+# import data into variable df
+df <- read.csv("Data/bikeVendors.csv")
+# view top 10 rows
+library(dplyr)
+top_n(df, 5)
+
+# Add a column which is the average market share among all stores of a certain bike
+library(tidyverse)
+df <- df %>%
+  mutate(Avg = select(., Albuquerque.Cycles:Wichita.Speed) %>% rowSums(na.rm = TRUE)/30)
+
+levels(df$category1)
+levels(df$category2)
+levels(df$frame)
+```
+
+So we have 35 fields in total. 
+* The first column 'model' is the bike's model. Each row respresents one model of bikes.
+* The second column 'category1' represents the types of the bike: "Mountain" or "Road"
+* The third column 'category2' categorize bikes into more detailed types, including Cross Country Race, Cyclocross, Fat Bike, etc.
+* The fourth column 'frame' represents the material of which the bike's frame is made: Aluminum or Carbon.
+* The fifth column 'price' is the bike's price
+* The 6th to 35th columns represents names of bike stores. In these columns, each cell is the market share of a certain bike (indicated by the row) in a certain store (indicated by the column).
+
+Then let's take a look of the data type of each columns
+
+```{r}
+str(df)
+
+```
+
+model, category1, category2 and frame are factors because these are categorical data. Price is in int and the market shares in each stores is in num. The data type is correct so we don't need to convert.
+
+
+
+
+## Explore data
+
+### price
+
+```{r}
+df1 <- df[order(df$price),] # sort data by price
+barplot(df1$price, names.arg=df1$model, xlab = "Bike model", ylab = "Price",
+        main = "Bike Price", col = "green", border = "white")
+
+boxplot(df$price, main = "Bike Price")
+```
+
+It looks like the variance of bike price is quite large. Based on the box plot, the median is slightly above 3100, while the 1st and 3rd quantiles are about 2000 and 5500 respectively. There are also some very large data points. These could be outliers. We can confirm our obervation by doing the calculations below:
+
+```{r}
+mean(df$price)
+quantile(df$price)
+```
+
+We can also compare the average price of Mountain bikes to Road bikes
+
+```{r}
+# Mountain bike vs Road bike
+boxplot(df$price~df$category1, ylab = "Average Price")
+```
+
+From the plot we can see mountain bikes price is higher than road bike on average.
+
+### average market share 
+
+```{r}
+
+# select mountain bikes
+mountain <- subset(x = df, subset = category1 == "Mountain")
+# select road bikes
+road <- subset(x = df, subset = category1 == "Road")
+# plot mountain bike mkt shares
+plot(mountain$Avg, type = "o", col = "red", xlab = "Bike model", ylab = "Average Market Share",
+     main = "Average market share of bikes by categories")
+# add line of road bike shares
+lines(road$Avg, type = "o", col = "blue")
+```
+
+Average market share of different bike models varies a lot. It looks like the market shares of road bikes (blue) is larger than mountain bikes (red) in general. Let's confirm that by box plot:
+
+```{r}
+boxplot(df$Avg ~ df$category1, ylab = "Average Market Share")
+```
+
+
+### clusters
+
+```{r}
+library(cluster)
+library(factoextra)
+
+# drop categorial data fields
+drops <- c("model", "category1", "category2", "frame")
+bike2 <- df
+bike2 <- bike2[, !(names(bike2) %in% drops)]
+
+# use bike models as row names
+bike_model <- df$model
+row.names(bike2) <- bike_model
+
+bike2$price <- as.numeric(bike2$price)
+
+bike2 <- na.omit(bike2) # remove missing value
+bike2 <- scale(bike2) # scaling to avoid influence of unit
+
+set.seed(123)
+
+fviz_nbclust(bike2, kmeans, method = "wss")
+
+# Average Silhousette Method 
+fviz_nbclust(bike2, kmeans, method = "silhouette")
+
+# Gap Statistic Method 
+gap_stat <- clusGap(bike2, FUN = kmeans, nstart = 25,
+                    K.max = 10, B = 50)
+fviz_gap_stat(gap_stat)
+```
+
+From the plot we know 4 is the optimal number of clusters. We will do k-means by 4 groups.
+
+```{r}
+k4 <- kmeans(bike2, centers = 4, nstart = 25)
+fviz_cluster(k4, data = bike2)
+```
+
+
+
+
+## Analysis
+
+### 1. Which type of bikes has higher average price?
+   
+To answer this question, we need to perform a t-test. First step is to test the assumption. The dependent variable (price) should be normally distributed:
+
+```{r}
+# View average price of different types of bikes 
+boxplot(df$price~df$category1, ylab = "Average Price")
+
+plot(density(df$price))
+
+# check skewness
+library(moments)
+agostino.test(df$price)
+# fix positive skew
+agostino.test(log(df$price))
+```
+
+We found positive skewness, so we take log of the dependent variable to fix it. After taking log, we managed to eliminate the skewness. p-value is significantly improved from 7.772e-06 to 0.21. Now e will proceed the t-analysis though the assumption may be violated to some extent. 
+
+```{r}
+# build model
+price_category <- t.test(sqrt(price) ~ category1, data = df)
+price_category
+```
+
+The p value 0.5223 is larger than 0.05, so the difference of the two groups is insignificant. Therefore, although from the plot it seems like the average price of mountain bike is higher than road bike, statistacally the difference is insignificant.
+
+### 2. Is the average price of aluminum bike different from carbon bike?
+
+Again we need to perform a t-test. First step is to test the assumption. We already the distribution of the dependent variable (price) has positive skew, so we will do the same (taking log) to fix the skewness.
+
+```{r}
+# View average price of different types of bikes 
+boxplot(df$price~df$frame, ylab = "Average Price")
+
+# check distribution
+
+# check skewness
+library(moments)
+agostino.test(df$price)
+# fix positive skew
+agostino.test(log(df$price))
+
+# build model
+price_category <- t.test(log(price) ~ frame, data = df)
+price_category
+```
+
+The p-value is smaller than 0.05, so the difference of price between aluminum bike and carbon bike is significant. From the boxplot we see the average of carbon bike is higher. Therefore we can confidently conclude that the average price of bikes made of carbon is higher than those made in aluminum.
+
+### 3. Which model has the highest market share?
+To find out which model has the highest market share, we need to find the average market share of each model among all the 30 stores. 
+
+For the purpose of my research, I will add a new colomn named 'Avg'. It is the average market share of a bike amoung all the 30 stores in the data set. The exact market share should be the average market share weighted by each store's number of bikes sale. But because we don't know the number of bikes sale in each store, we cannot calculate the weighted average. So we will simplify the problem and just calculate the mean of a bike's market share at each store as the average market share of that model of bike. The average market share will be stored in a new column named "Avg_percentage". We multiplied 100 to it to make the values in percentage. 
+
+```{r}
+library(tidyverse)
+df <- df %>%
+  mutate(Avg_percentage = select(., Albuquerque.Cycles:Wichita.Speed) %>% rowSums(na.rm = TRUE)*100/30)
+```
+
+Then we can find which bike has highest market share by sorting
+
+```{r}
+# sort data by average market share
+sorted_mkt <- df[order(df$Avg_percentage, decreasing = TRUE),] 
+
+top_n(sorted_mkt[, c("model", "category1", "price", "Avg_percentage" )], 10)
+```
+
+So the top 5 best selling bikes are CAAD12 Red, Slice Ultegra, Supersix Evo Ultegra 3, Slice Ultegra D12 and Trigger Carbon 4. Among the Top 10 best selling bikes, only 1 is a mountain bike; all other 9 bikes are road bike.
+
+### 4. Can we predict market share by price?
+
+We need to build a regression model to find the relation ship between market share and price.
+
+```{r}
+# Distribution of dependent variable
+plot(density(df$Avg_percentage))
+agostino.test(df$Avg_percentage)
+
+agostino.test(log(df$price))
+```
+
+The dependent variable Avg_percentage is normally distributed and it does not has skewness. We already know the predictor price has positive skew and we can fix it by taking log.
+
+
+Next we need to identify the relationships visually.
+
+```{r}
+# identify relationship between predictor and dependent variable
+library(car)
+scatterplot(df$price, df$Avg_percentage)
+```
+
+Now we can build a linear regression model:
+
+```{r}
+# linear regression model
+mkt_model <- lm(df$Avg_percentage ~ df$price)
+summary(mkt_model)
+
+# check residuals
+qqnorm(mkt_model$residuals)
+qqline(mkt_model$residuals)
+shapiro.test(mkt_model$residuals)
+```
+
+So we found price has negative influence on market share, and the effect is significant (p < 0.05). We also see the residuls of the model is fine but it's worthing noting that the p-value is very close to 0.05. Therefore we can conclude that lower the price of a bike will enlarge its market share.
+
