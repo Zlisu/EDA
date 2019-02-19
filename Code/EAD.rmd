@@ -72,6 +72,12 @@ model, category1, category2 and frame are factors because these are categorical 
 
 ## Explore data
 
+### numbers by category
+
+```{r}
+table(df$category1)
+```
+
 ### price
 
 ```{r}
