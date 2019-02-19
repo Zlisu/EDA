@@ -1,10 +1,10 @@
-# Country Analysis Project
+# Bike Market Analysis Project
 
-This project research on country's development in the past 200 years with EDA approach. 
+This project research on data of bike market with EDA approach. 
 
 # Purpose
 
-The project's purpose is to understand countries' development trend in the last 2 centries. We will also compare different reginons (continents). Based on the discovery, we will try to make assumptions on what could be the factors that caused the difference between countries or regions.
+This project researches on the bike market. We will gain insights on valubale information of bike's market by investigate on bike's features, price and market shares. The research is conducted in EDA approach. We raised questions of our interest and answered the question by conducting analysis on the data we have. 
 
 # Information
 
@@ -17,10 +17,10 @@ The reserch will also provide descriptive summaries of our findings.
 
 # Data
 
-The project uses the gapminder dataset. The dataset have five fields:
-1. Country
-2. Year
-3. Life
-4. Population
-5. Income
-6. Region
+The project uses the BikeVendor dataset. We have 35 fields in total. 
+* The first column 'model' is the bike's model. Each row respresents one model of bikes.
+* The second column 'category1' represents the types of the bike: "Mountain" or "Road"
+* The third column 'category2' categorize bikes into more detailed types, including Cross Country Race, Cyclocross, Fat Bike, etc.
+* The fourth column 'frame' represents the material of which the bike's frame is made: Aluminum or Carbon.
+* The fifth column 'price' is the bike's price
+* The 6th to 35th columns represents names of bike stores. In these columns, each cell is the market share of a certain bike (indicated by the row) in a certain store (indicated by the column).
