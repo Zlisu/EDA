@@ -2,7 +2,10 @@
 title: "EAD Research on Bike Market"
 author: "Kunpeng Yang"
 date: "2/17/2019"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
 ---
 
 ```{r setup, include=FALSE}
@@ -15,7 +18,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 link to the Github repository: [Kunpeng Yang EDA project](https://github.com/Zlisu/EDA)
 
-## Purpose and Questions
+## 1. Purpose and Questions
+
+This project researches on the bike market. We will gain insights on valubale information of bike's market by investigate on bike's features, price and market shares. The research is conducted in EDA approach. We raised questions of our interest and answered the question by conducting analysis on the data we have.    
 
 Questions:
 
@@ -27,7 +32,9 @@ Questions:
 
 4. Is price predictive of market share?
 
-## Describe data
+--------------------------------------------
+
+## 2. Describe data
 
 Let's take a first look at the dataset, and find out what fileds we got
 
@@ -62,23 +69,29 @@ Then let's take a look of the data type of each columns
 
 ```{r}
 str(df)
-
 ```
 
 model, category1, category2 and frame are factors because these are categorical data. Price is in int and the market shares in each stores is in num. The data type is correct so we don't need to convert.
 
 
+----------------------------------
 
+## 3. Explore data
 
-## Explore data
-
-### numbers by category
+### 3.1 numbers by category
 
 ```{r}
 table(df$category1)
+table(df$category2)
+table(df$frame)
 ```
 
-### price
+We have 97 models of bikes in total. If we group them by category1, we can see there are 51 mountain bikes and 46 road bikes. If we group them by category2, we have 19 Cross Country Race bikes, 4 Cyclocross bikes, 21 Elite Road bikes, 16 Endurace Road bikes, 2 Fat Bikes, 8 Over Mountain bikes, 9 Sport bikes, 13 Trail bikes and 5 Triathalon.
+
+The percentage of each group of bikes is visulized by the pie charts below:
+
+
+### 3.2 price
 
 ```{r}
 df1 <- df[order(df$price),] # sort data by price
@@ -104,7 +117,17 @@ boxplot(df$price~df$category1, ylab = "Average Price")
 
 From the plot we can see mountain bikes price is higher than road bike on average.
 
-### average market share 
+Also we can get some statics of the price by group:
+
+```{r}
+library(pastecs)
+by(df$price, df$category1, stat.desc, basic = FALSE, norm = TRUE)
+```
+
+We can see that Mountain bikes have higher median and mean than Road bikes in term of price. The price of mountain bike also has higher standard deviation.
+
+
+### 3.3 average market share 
 
 ```{r}
 
@@ -126,7 +149,9 @@ boxplot(df$Avg ~ df$category1, ylab = "Average Market Share")
 ```
 
 
-### clusters
+### 3.4 clusters
+
+We can find out which models are more similar to each other by grouping them into several clusters. To do this we first needs to calculte the optimal number of clusters, and then group similar observations and plot.
 
 ```{r}
 library(cluster)
@@ -166,12 +191,12 @@ k4 <- kmeans(bike2, centers = 4, nstart = 25)
 fviz_cluster(k4, data = bike2)
 ```
 
+-------------------------
 
 
+## 4. Analysis
 
-## Analysis
-
-### 1. Which type of bikes has higher average price?
+### 4.1. Which type of bikes has higher average price?
    
 To answer this question, we need to perform a t-test. First step is to test the assumption. The dependent variable (price) should be normally distributed:
 
@@ -198,7 +223,7 @@ price_category
 
 The p value 0.5223 is larger than 0.05, so the difference of the two groups is insignificant. Therefore, although from the plot it seems like the average price of mountain bike is higher than road bike, statistacally the difference is insignificant.
 
-### 2. Is the average price of aluminum bike different from carbon bike?
+### 4.2. Is the average price of aluminum bike different from carbon bike?
 
 Again we need to perform a t-test. First step is to test the assumption. We already the distribution of the dependent variable (price) has positive skew, so we will do the same (taking log) to fix the skewness.
 
@@ -221,7 +246,7 @@ price_category
 
 The p-value is smaller than 0.05, so the difference of price between aluminum bike and carbon bike is significant. From the boxplot we see the average of carbon bike is higher. Therefore we can confidently conclude that the average price of bikes made of carbon is higher than those made in aluminum.
 
-### 3. Which model has the highest market share?
+### 4.3. Which model has the highest market share?
 To find out which model has the highest market share, we need to find the average market share of each model among all the 30 stores. 
 
 For the purpose of my research, I will add a new colomn named 'Avg'. It is the average market share of a bike amoung all the 30 stores in the data set. The exact market share should be the average market share weighted by each store's number of bikes sale. But because we don't know the number of bikes sale in each store, we cannot calculate the weighted average. So we will simplify the problem and just calculate the mean of a bike's market share at each store as the average market share of that model of bike. The average market share will be stored in a new column named "Avg_percentage". We multiplied 100 to it to make the values in percentage. 
@@ -243,7 +268,7 @@ top_n(sorted_mkt[, c("model", "category1", "price", "Avg_percentage" )], 10)
 
 So the top 5 best selling bikes are CAAD12 Red, Slice Ultegra, Supersix Evo Ultegra 3, Slice Ultegra D12 and Trigger Carbon 4. Among the Top 10 best selling bikes, only 1 is a mountain bike; all other 9 bikes are road bike.
 
-### 4. Can we predict market share by price?
+### 4.4 Can we predict market share by price?
 
 We need to build a regression model to find the relation ship between market share and price.
 
@@ -281,3 +306,14 @@ shapiro.test(mkt_model$residuals)
 
 So we found price has negative influence on market share, and the effect is significant (p < 0.05). We also see the residuls of the model is fine but it's worthing noting that the p-value is very close to 0.05. Therefore we can conclude that lower the price of a bike will enlarge its market share.
 
+-------------------
+
+## 5. Summary of findings
+
+Through the research on bike market, we raised 4 questions and managed to find the answers by analyzing the data from bike vendors. 
+
+We found the average prices of Mountain bikes and Road bikes are not significantly different. But the material of the bike does have significant influence on bikes price; the average price of bikes made of carbon is higher than the average price of those made of aluminum. 
+
+In addition, we figured out that the top 5 best selling bikes amoung the vendors in our dataset. We also found that among the Top 10 best selling bikes, only 1 is a mountain bike; all other 9 bikes are road bike.
+
+Further more, we analyzed the relationship between bike's price and market share by building a regression model. According to our model, price and market share have negative relation; lower the price of a bike will enlarge its market share.
